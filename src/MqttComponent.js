@@ -1,41 +1,37 @@
+// src/MqttComponent.js
 import React, { useState, useEffect } from 'react';
 import mqtt from 'mqtt';
+import TagBasedMessageSorter from './components/TagBasedMessageSorter';
 
 const MqttComponent = () => {
   const [messages, setMessages] = useState([]);
-  const [client, setClient] = useState(null);
-
+  
   useEffect(() => {
-    // Connect to the WebSocket port of your local broker
-    const brokerUrl = 'ws://localhost:9001';
+    
+    const brokerUrl = process.env.REACT_APP_MQTT_BROKER_URL;
+  
+    const topic = process.env.REACT_APP_MQTT_TOPIC;
 
-    const connectClient = mqtt.connect(brokerUrl);
+    console.log(`Attempting to connect to broker at: ${brokerUrl}`);
+    const client = mqtt.connect(brokerUrl);
 
-    setClient(connectClient);
-
-    connectClient.on('connect', () => {
+    client.on('connect', () => {
       console.log('Connected to local MQTT broker via WebSockets');
       
-      // The topic you want to subscribe to
-      const topic = 'react/test'; 
-      
-      connectClient.subscribe(topic, (err) => {
-        if (!err) {
-          console.log(`Subscribed to topic: ${topic}`);
-        }
+      client.subscribe(topic, (err) => {
+        if (!err) console.log(`Subscribed to topic: ${topic}`);
       });
     });
 
-    connectClient.on('message', (topic, message) => {
+    client.on('message', (topic, message) => {
       const newMessage = message.toString();
       console.log(`Received message: ${newMessage} on topic: ${topic}`);
       setMessages((prevMessages) => [...prevMessages, newMessage]);
     });
 
-    // Cleanup on component unmount
     return () => {
-      if (connectClient) {
-        connectClient.end();
+      if (client) {
+        client.end();
         console.log('Disconnected from MQTT broker');
       }
     };
@@ -43,12 +39,15 @@ const MqttComponent = () => {
 
   return (
     <div>
-      <h2>MQTT Messages</h2>
-      <ul>
-        {messages.map((msg, index) => (
-          <li key={index}>{msg}</li>
-        ))}
-      </ul>
+      <div>
+        <h2>All MQTT Messages (Unfiltered)</h2>
+        {/* <ul>
+          {messages.map((msg, index) => (
+            <li key={index}>{msg}</li>
+          ))}
+        </ul> */}
+      </div>
+      <TagBasedMessageSorter messages={messages} />
     </div>
   );
 };
