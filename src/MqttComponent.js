@@ -40,7 +40,7 @@ const MqttComponent = () => {
   return (
     <div>
       <div>
-        <h2>All MQTT Messages (Unfiltered)</h2>
+        
         {/* <ul>
           {messages.map((msg, index) => (
             <li key={index}>{msg}</li>
